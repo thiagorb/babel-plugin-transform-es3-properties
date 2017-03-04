@@ -39,12 +39,14 @@
         } else {
             obj.__properties__()[prop] = initializeProperty(descriptor.value);
         }
+        return obj;
     };
 
     Object.defineProperties = function (obj, descriptors) {
         for (var prop in descriptors) {
             Object.defineProperty(obj, prop, descriptors[prop]);
         }
+        return obj;
     };
 
     decorate(
@@ -52,6 +54,14 @@
         'keys',
         function (original) {
             return function (obj) {
+                if (obj === null || obj === undefined) {
+                    throw new TypeError('Cannot convert undefined or null to object');
+                }
+
+                if (typeof obj.hasOwnProperty !== 'function') {
+                    return [];
+                }
+
                 var keys = [];
                 var originalKeys = original(obj);
                 for (var i = 0; i < originalKeys.length; i++) {
@@ -102,8 +112,8 @@ function isInvalidProperty (obj, prop) {
 }
 
 function callGetter(obj, prop) {
-    if (!obj) {
-        return undefined;
+    if (obj === null || obj === undefined) {
+        throw new TypeError("Cannot read property '" + prop + "' of " + obj);
     }
 
     if (isInvalidProperty(obj, prop)) {
@@ -145,7 +155,9 @@ function doIncrement(obj, prop) {
         return obj[prop]++;
     }
 
-    return obj.__properties__()[prop].set.call(obj, obj.__properties__()[prop].get.call(obj) + 1);
+    var previous = callGetter(obj, prop);
+    callSetter(obj, prop, previous + 1);
+    return previous;
 }
 
 function doDecrement(obj, prop) {
@@ -157,5 +169,7 @@ function doDecrement(obj, prop) {
         return obj[prop]--;
     }
 
-    return obj.__properties__()[prop].set.call(obj, obj.__properties__()[prop].get.call(obj) - 1);
+    var previous = callGetter(obj, prop);
+    callSetter(obj, prop, previous - 1);
+    return previous;
 }

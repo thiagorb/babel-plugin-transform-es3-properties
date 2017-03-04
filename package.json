@@ -9,11 +9,10 @@
   "devDependencies": {
     "babel": "^6.5.2",
     "babel-cli": "^6.22.2",
-    "mocha": "^3.2.0",
-    "walk": "^2.3.9"
+    "mocha": "^3.2.0"
   },
   "scripts": {
-    "test-original": "TEST_MODULES_ROOT=compilable ./node_modules/.bin/mocha -u tdd tests/test.js",
+    "test-specification": "TEST_MODULES_ROOT=specification ./node_modules/.bin/mocha -u tdd tests/test.js",
     "test": "./compile-tests.sh; TEST_MODULES_ROOT=compiled ./node_modules/.bin/mocha -u tdd tests/test.js"
   }
 }

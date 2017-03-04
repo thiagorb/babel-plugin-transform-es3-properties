@@ -1,5 +1,6 @@
 const t = require('babel-types');
 const fs = require('fs');
+const path = require('path');
 
 function getPropExpression(memberExpression) {
     if (memberExpression.property.type === 'Identifier' && !memberExpression.computed) {
@@ -17,7 +18,7 @@ module.exports = {
     visitor: {
         Program: {
             enter: function (program) {
-                const runtime = fs.readFileSync('./src/runtime.js');
+                const runtime = fs.readFileSync(path.join(__dirname, 'runtime.js'));
                 const runtimeStatement = t.expressionStatement(t.identifier(runtime));
                 program.node.body.unshift(runtimeStatement);
             }
@@ -85,9 +86,11 @@ module.exports = {
                     expression.node.object.name === 'Object' &&
                     expression.node.property.name === 'defineProperties'
                 ) {
+                    /*
                     expression.replaceWith(
                         t.identifier('Object__defineProperties')
                     );
+                    */
                     return;
                 }
 

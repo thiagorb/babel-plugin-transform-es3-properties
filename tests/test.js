@@ -1,5 +1,6 @@
 const assert = require('assert');
 const path = require('path');
+const fs = require('fs');
 
 const originalImplementations = {
     keys: Object.keys,
@@ -8,63 +9,38 @@ const originalImplementations = {
     prototype_hasOwnProperty: Object.prototype.hasOwnProperty
 };
 
-const restoreOriginalImplementations = () => {
+const callAndRestore = call => {
+    var value;
+    var exception;
+
+    try {
+        value = call();
+    } catch (e) {
+        exception = e;
+    }
+
     Object.keys = originalImplementations.keys;
     Object.defineProperty = originalImplementations.defineProperty;
     Object.defineProperties = originalImplementations.defineProperties;
     Object.prototype.hasOwnProperty = originalImplementations.prototype_hasOwnProperty;
+
+    if (exception) {
+        throw exception;
+    }
+
+    return value;
 };
 
-function describeClassTests (className, methods) {
-    suite(className, () => {
-        Object.keys(methods).forEach(method => {
-            suite(method, () => {
-                methods[method].forEach(testDescription => {
-                    test(testDescription, () => {
-                        try {
-                            const testCase = require('./' + path.join(process.env.TEST_MODULES_ROOT, className, method, testDescription));
-                            var actual = testCase.actual();
-                            restoreOriginalImplementations();
-                            assert[testCase.assertion](actual, testCase.expected);
-                        } catch (e) {
-                            restoreOriginalImplementations();
-                            throw e;
-                        }
-                    });
-                });
-            });
-
-        });
-    });
-}
-
-/*
-describeClassTests('object', {
-    keys: [
-        'should-not-return-properties'
-    ]
-});
-*/
-
-const fs = require('fs');
-
-function runSuite(path) {
-    fs.readdirSync('./tests/' + path).forEach(name => {
-        if (fs.statSync('./tests/' + path + '/' + name).isDirectory()) {
+function runSuite(startPath) {
+    fs.readdirSync(path.join(__dirname, startPath)).forEach(name => {
+        if (fs.statSync(path.join(__dirname, startPath, name)).isDirectory()) {
             suite(name, function () {
-                runSuite(path + '/' + name);
+                runSuite(path.join(startPath, name));
             });
         } else {
             test(name, () => {
-                try {
-                    const testCase = require('./' + path + '/' + name);
-                    var actual = testCase.actual();
-                    restoreOriginalImplementations();
-                    assert[testCase.assertion](actual, testCase.expected);
-                } catch (e) {
-                    restoreOriginalImplementations();
-                    throw e;
-                }
+                const testCase = require(path.join(__dirname, startPath, name));
+                assert[testCase.assertion](callAndRestore(testCase.actual), testCase.expected);
             });
         }
     });
