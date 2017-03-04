@@ -6,4 +6,4 @@ COMPILED_ROOT="$ROOT/tests/compiled"
 
 rm -rf $COMPILED_ROOT
 
-$ROOT/node_modules/.bin/babel --plugins transform-es3-properties --out-dir $COMPILED_ROOT $SPECIFICATION_ROOT > /dev/null
+$ROOT/node_modules/.bin/babel --plugins $ROOT --out-dir $COMPILED_ROOT $SPECIFICATION_ROOT > /dev/null
